@@ -1,0 +1,43 @@
+server{
+	listen 443 ssl;
+	listen [::]:443 ssl;
+
+	server_name localhost ybahjaou.42.fr;
+
+	ssl_certificate    CERTSdefault.crt;
+	ssl_certificate_key    CERTSdefault.key;
+	ssl_protocols TLSv1.2 TLSv1.3;
+
+	root        /volumes/wordpress/ ;
+	index	    index.php index.html index.htm;
+
+	location / {
+	    try_files $uri $uri/ = 404;
+	}
+
+	location ~ \.php$ {
+		try_files $uri /index.php =404;
+		fastcgi_pass wordpress:9000;
+		fastcgi_index index.php;
+		fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+		include fastcgi_params;
+	}
+
+	error_log    /var/log/nginx/error_log;
+}
+
+server{
+	listen 80;
+	listen [::]:80;
+
+	server_name bonus.ybahjaou.42.fr;
+
+	root        /static/ ;
+	index	    index.html;
+
+	location / {
+	    try_files $uri $uri/ = 404;
+	}
+
+	error_log    /var/log/nginx/error_log;
+}

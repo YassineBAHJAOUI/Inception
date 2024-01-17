@@ -1,0 +1,123 @@
+version: "3.7"
+services:
+        nginx:
+                build: requirements/nginx
+                image: nginx
+                container_name: nginx
+                ports:
+                        - "443:443"
+                        - "80:80"
+                volumes:
+                        - wordpress:/volumes
+                        - static:/static
+                depends_on:
+                        - wordpress
+                        - static_page
+                env_file:
+                        - .env
+                networks:
+                        - localhost
+                restart: always
+        wordpress:
+                build: requirements/wordpress
+                image: wordpress
+                container_name: wordpress
+                volumes:
+                        - wordpress:/volumes
+                depends_on:
+                        - mariadb
+                        - redis
+                env_file:
+                        - .env
+                networks:
+                        - localhost
+                restart: always
+        mariadb:
+                build: requirements/mariadb
+                image: mariadb
+                container_name: mariadb
+                volumes:
+                        - mariadb:/var/lib/mysql
+                env_file:
+                        - .env
+                networks:
+                        - localhost
+                restart: always
+        redis:
+                build: requirements/bonus/redis
+                image: redis
+                container_name: redis
+                networks:
+                        - localhost
+                restart: always
+        vsftpd:
+                build: requirements/bonus/vsftpd
+                image: vsftpd
+                container_name: vsftpd
+                env_file:
+                      - .env
+                volumes:
+                      - wordpress:/volumes
+                ports:
+                      - "20:20"
+                      - "21:21"
+                networks:
+                      - localhost
+                restart: always
+        adminer:
+                build: requirements/bonus/adminer
+                image: adminer
+                container_name: adminer
+                ports:
+                      - "8888:8888"
+                networks:
+                      - localhost
+                restart: always
+        static_page:
+                build: requirements/bonus/static_page
+                image: static_page
+                container_name: static_page
+                volumes:
+                      - static:/volumes
+                depends_on:
+                      - wordpress
+        cAdvisor:
+                build: requirements/bonus/cadvisor
+                image: cadvisor
+                container_name: cadvisor
+                depends_on:
+                      - wordpress
+                ports:
+                      - "8080:8080"
+                volumes:
+                      - /:/rootfs:ro
+                      - /var/run:/var/run:ro
+                      - /sys:/sys:ro
+                      - /var/lib/docker/:/var/lib/docker:ro
+                      - /dev/disk/:/dev/disk:ro
+                restart: always
+
+volumes:
+  wordpress:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/home/yassine/data/wordpress/'
+  mariadb:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/home/yassine/data/mariadb/'
+  static:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/home/yassine/data/static/'
+
+
+networks:
+        localhost:
+                driver: bridge
